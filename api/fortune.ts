@@ -12,6 +12,7 @@ import type { VercelRequest, VercelResponse, ValidationError } from '../lib/type
 import {
   checkRateLimitAsync,
   setCorsHeaders,
+  setSecurityHeaders,
   handleCorsPrelight,
   getClientIP,
 } from '../lib/api-utils.js'
@@ -142,9 +143,10 @@ async function callOpenAI(
 // ── Handler ──
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
+  // CORS + Security headers
   if (handleCorsPrelight(req, res)) return
   setCorsHeaders(req, res)
+  setSecurityHeaders(res)
 
   // Method check
   if (req.method !== 'POST') {

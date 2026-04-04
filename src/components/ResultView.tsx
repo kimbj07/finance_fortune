@@ -20,6 +20,12 @@ function buildBirthDate(input: UserInput): string {
   return `${input.birthYear}-${m}-${d}`
 }
 
+/** PII를 해시하여 React Query 캐시 키에서 평문 노출 방지 */
+function hashForQueryKey(input: UserInput, birthDate: string): string {
+  const raw = `${input.name}|${birthDate}|${input.birthHour}|${input.gender}|${input.creditScore}`
+  return btoa(encodeURIComponent(raw)).slice(0, 24)
+}
+
 export default function ResultView({ input, onBack }: ResultViewProps) {
   const [activeTab, setActiveTab] = useState<'monthly' | 'weekly'>('monthly')
   const resultRef = useRef<HTMLDivElement>(null)
@@ -29,7 +35,7 @@ export default function ResultView({ input, onBack }: ResultViewProps) {
 
   // 월간 운세 fetch
   const monthly = useQuery({
-    queryKey: ['fortune', 'monthly', input.name, birthDate, input.birthHour, input.gender],
+    queryKey: ['fortune', 'monthly', hashForQueryKey(input, birthDate)],
     queryFn: () => fetchFortune({
       name: input.name,
       birthDate,
@@ -44,7 +50,7 @@ export default function ResultView({ input, onBack }: ResultViewProps) {
   // 주간 운세 fetch (월간 결과를 context로 전달)
   const monthlyResult = monthly.data?.result as MonthlyFortune | undefined
   const weekly = useQuery({
-    queryKey: ['fortune', 'weekly', input.name, birthDate, input.birthHour, input.gender],
+    queryKey: ['fortune', 'weekly', hashForQueryKey(input, birthDate)],
     queryFn: () => fetchFortune({
       name: input.name,
       birthDate,

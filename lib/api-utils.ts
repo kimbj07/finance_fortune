@@ -25,7 +25,7 @@ export function getClientIP(req: VercelRequest): string {
   const forwardedStr = Array.isArray(forwarded) ? forwarded.join(',') : forwarded
   if (typeof forwardedStr === 'string' && forwardedStr.trim()) {
     const ips = forwardedStr.split(',').map(ip => ip.trim()).filter(Boolean)
-    if (ips.length > 0) return ips[ips.length - 1]!
+    if (ips.length > 0) return ips[0]!
   }
 
   return 'unknown'
@@ -36,10 +36,27 @@ export async function checkRateLimitAsync(req: VercelRequest): Promise<RateLimit
   return checkRateLimitRedis(ip)
 }
 
-export function setCorsHeaders(_req: VercelRequest, res: VercelResponse): void {
-  res.setHeader('Access-Control-Allow-Origin', '*')
+const ALLOWED_ORIGINS = [
+  'https://financefortune.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+]
+
+export function setCorsHeaders(req: VercelRequest, res: VercelResponse): void {
+  const origin = req.headers?.origin
+  if (typeof origin === 'string' && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Vary', 'Origin')
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+}
+
+export function setSecurityHeaders(res: VercelResponse): void {
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
 }
 
 export function handleCorsPrelight(req: VercelRequest, res: VercelResponse): boolean {

@@ -81,6 +81,10 @@ export async function checkRateLimitRedis(identifier: string): Promise<RateLimit
     const { success, remaining } = await limiter.limit(identifier)
     return { allowed: success, remaining, isRedis: true }
   } catch {
+    // Fail closed in production, fallback in dev
+    if (process.env.NODE_ENV === 'production') {
+      return { allowed: false, remaining: 0, isRedis: false }
+    }
     const result = checkMemoryRateLimit(identifier)
     return { ...result, isRedis: false }
   }

@@ -47,6 +47,7 @@ export async function checkAndIncrementBudget(): Promise<boolean> {
     }
     return count <= DAILY_BUDGET_MAX
   } catch {
-    return true // Redis 에러 시 허용
+    // Fail closed: Redis 에러 시 요청 차단 (프로덕션 보호)
+    return false
   }
 }
