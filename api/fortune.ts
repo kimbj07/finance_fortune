@@ -110,7 +110,7 @@ async function callOpenAI(
           { role: 'user', content: userPrompt } as OpenAIMessage,
         ],
         temperature: 0.8,
-        max_tokens: 1000,
+        max_tokens: 2000,
         response_format: { type: 'json_object' },
       }),
       signal: controller.signal,
