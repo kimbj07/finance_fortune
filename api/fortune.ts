@@ -205,7 +205,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
     : body.period === 'loan'
     ? getLoanPeriodKey()
     : getMonthlyPeriodKey()
-  const cacheKey = generateFortuneKey(body.name, body.birthDate, body.birthHour, body.gender, periodKey)
+  const cacheKey = generateFortuneKey(body.name, body.birthDate, body.birthHour, body.gender, periodKey, body.creditScore)
 
   const cached = await getCached<unknown>(cacheKey)
   if (cached) {

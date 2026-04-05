@@ -48,8 +48,9 @@ export function generateFortuneKey(
   birthHour: string,
   gender: 'male' | 'female',
   periodKey: string,
+  creditScore: string = 'unknown',
 ): string {
-  const identifier = `${name}|${birthDate}|${birthHour}|${gender}|${periodKey}`
+  const identifier = `${name}|${birthDate}|${birthHour}|${gender}|${creditScore}|${periodKey}`
   const hash = createHash('sha256').update(identifier).digest('hex')
   return `${CACHE_PREFIX}${hash.slice(0, 32)}`
 }
