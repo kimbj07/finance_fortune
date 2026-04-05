@@ -69,7 +69,7 @@ export default function ScoreGauge({ score, size = 140 }: ScoreGaugeProps) {
         </text>
       </svg>
       <span
-        className="text-sm font-bold px-3 py-1 rounded-full"
+        className="text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap"
         style={{ backgroundColor: color + '30', color }}
       >
         {label}

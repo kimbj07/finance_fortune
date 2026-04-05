@@ -259,7 +259,7 @@ function CreditScoreBadge({ creditScore }: { creditScore: string }) {
   const scoreText = range ? range.value.replace('-', '~') + '점' : ''
 
   return (
-    <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full ${style.bg} border ${style.border}`}>
+    <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full whitespace-nowrap ${style.bg} border ${style.border}`}>
       <span className="text-xs">📊</span>
       <span className={`text-xs font-medium ${style.text}`}>
         {style.label} ({scoreText}) 기준 맞춤 분석

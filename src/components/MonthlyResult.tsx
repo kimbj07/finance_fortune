@@ -31,7 +31,7 @@ export default function MonthlyResult({ fortune }: MonthlyResultProps) {
         {fortune.keywords.map((keyword, i) => (
           <span
             key={i}
-            className="px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 text-sm font-medium"
+            className="px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-200 text-sm font-medium whitespace-nowrap"
           >
             #{keyword}
           </span>

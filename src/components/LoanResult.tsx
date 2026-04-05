@@ -30,7 +30,7 @@ export default function LoanResult({ fortune }: LoanResultProps) {
         {fortune.keywords.map((keyword, i) => (
           <span
             key={i}
-            className="px-4 py-2 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-200 text-sm font-medium"
+            className="px-4 py-2 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-200 text-sm font-medium whitespace-nowrap"
           >
             #{keyword}
           </span>
