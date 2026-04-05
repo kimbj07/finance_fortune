@@ -93,10 +93,14 @@ export default function ResultView({ input, onBack }: ResultViewProps) {
   const handleDownload = useCallback(async () => {
     if (!resultRef.current) return
     try {
-      const dataUrl = await domToPng(resultRef.current, {
+      const el = resultRef.current
+      const originalWidth = el.style.width
+      el.style.width = '400px'
+      const dataUrl = await domToPng(el, {
         scale: 2,
         backgroundColor: '#1e1b4b',
       })
+      el.style.width = originalWidth
       const link = document.createElement('a')
       const tabLabel = activeTab === 'monthly' ? '월간' : activeTab === 'weekly' ? '주간' : '대출운'
       link.download = `금전운세_${input.name}_${tabLabel}_${new Date().toISOString().slice(0,7)}.png`
