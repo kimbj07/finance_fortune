@@ -16,7 +16,7 @@ export interface FortuneRequest {
   birthHour: string
   gender: 'male' | 'female'
   creditScore: string // 신용점수 구간 or 'unknown'
-  period: 'monthly' | 'weekly'
+  period: 'monthly' | 'weekly' | 'loan'
   sessionId: string
   /** 주간 운세 생성 시 월간 운세 context (일관성 유지용) */
   monthlyContext?: {
@@ -51,7 +51,20 @@ export interface WeeklyFortune {
   lottoNumbers: [number, number, number, number, number, number]
 }
 
-export type FortuneResult = MonthlyFortune | WeeklyFortune
+/** 대출운 결과 */
+export interface LoanFortune {
+  period: 'loan'
+  score: number
+  summary: string
+  timingLuck: string
+  rateLuck: string
+  repaymentLuck: string
+  cautionPoint: string
+  luckyAction: string
+  keywords: [string, string, string]
+}
+
+export type FortuneResult = MonthlyFortune | WeeklyFortune | LoanFortune
 
 /** API 응답 */
 export interface FortuneResponse {

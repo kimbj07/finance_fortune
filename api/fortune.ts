@@ -34,7 +34,7 @@ import {
   setCached,
 } from '../lib/cache.js'
 import { checkAndIncrementBudget } from '../lib/budget.js'
-import { buildMonthlyPrompt, buildWeeklyPrompt } from '../lib/prompts.js'
+import { buildMonthlyPrompt, buildWeeklyPrompt, buildLoanPrompt } from '../lib/prompts.js'
 import { BIRTH_HOUR_VALUES } from '../lib/constants.js'
 
 // ── Types ──
@@ -45,7 +45,7 @@ interface FortuneRequestBody {
   birthHour: string
   gender: 'male' | 'female'
   creditScore?: string
-  period: 'monthly' | 'weekly'
+  period: 'monthly' | 'weekly' | 'loan'
   sessionId?: string
   monthlyContext?: {
     score: number
@@ -75,8 +75,8 @@ function validate(body: unknown): ValidationError[] {
   if (b.gender !== 'male' && b.gender !== 'female') {
     errors.push({ field: 'gender', message: 'Gender must be male or female' })
   }
-  if (b.period !== 'monthly' && b.period !== 'weekly') {
-    errors.push({ field: 'period', message: 'Period must be monthly or weekly' })
+  if (b.period !== 'monthly' && b.period !== 'weekly' && b.period !== 'loan') {
+    errors.push({ field: 'period', message: 'Period must be monthly, weekly, or loan' })
   }
 
   return errors
@@ -199,8 +199,9 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
   }
 
   // Cache check
-  const periodKey = body.period === 'monthly' ? getMonthlyPeriodKey() : getWeeklyPeriodKey()
-  const cacheKey = generateFortuneKey(body.name, body.birthDate, body.birthHour, body.gender, periodKey)
+  const periodKey = body.period === 'weekly' ? getWeeklyPeriodKey() : getMonthlyPeriodKey()
+  const cacheKey = generateFortuneKey(body.name, body.birthDate, body.birthHour, body.gender,
+    body.period === 'loan' ? periodKey.replace('monthly:', 'loan:') : periodKey)
 
   const cached = await getCached<unknown>(cacheKey)
   if (cached) {
@@ -221,6 +222,8 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
   // Build prompt
   const { systemPrompt, userPrompt } = body.period === 'monthly'
     ? buildMonthlyPrompt(body.name, body.birthDate, body.birthHour, body.gender, body.creditScore)
+    : body.period === 'loan'
+    ? buildLoanPrompt(body.name, body.birthDate, body.birthHour, body.gender, body.creditScore)
     : buildWeeklyPrompt(body.name, body.birthDate, body.birthHour, body.gender, body.creditScore, body.monthlyContext)
 
   // Call OpenAI (with 1 auto retry)
@@ -244,7 +247,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
   }
 
   // Cache the result
-  const ttl = body.period === 'monthly' ? getMonthlyTTL() : getWeeklyTTL()
+  const ttl = body.period === 'weekly' ? getWeeklyTTL() : getMonthlyTTL()
   await setCached(cacheKey, fortuneData, ttl)
 
   logOpenAI(log, 'gpt-4o-mini', Date.now() - startTime, false)

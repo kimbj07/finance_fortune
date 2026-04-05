@@ -1,11 +1,13 @@
 import { useState, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { domToPng } from 'modern-screenshot'
-import type { UserInput, MonthlyFortune, WeeklyFortune, FortuneResponse } from '../types'
+import type { UserInput, MonthlyFortune, WeeklyFortune, LoanFortune, FortuneResponse } from '../types'
 import { fetchFortune } from '../services/api'
 import { getSessionId } from '../utils/session'
+import { CREDIT_SCORE_RANGES } from '../../lib/constants'
 import MonthlyResult from './MonthlyResult'
 import WeeklyResult from './WeeklyResult'
+import LoanResult from './LoanResult'
 import LoadingScreen from './LoadingScreen'
 import ErrorScreen from './ErrorScreen'
 
@@ -27,7 +29,7 @@ function hashForQueryKey(input: UserInput, birthDate: string): string {
 }
 
 export default function ResultView({ input, onBack }: ResultViewProps) {
-  const [activeTab, setActiveTab] = useState<'monthly' | 'weekly'>('monthly')
+  const [activeTab, setActiveTab] = useState<'monthly' | 'weekly' | 'loan'>('monthly')
   const resultRef = useRef<HTMLDivElement>(null)
 
   const birthDate = buildBirthDate(input)
@@ -66,10 +68,26 @@ export default function ResultView({ input, onBack }: ResultViewProps) {
     enabled: !!monthly.data, // 월간 완료 후 주간 요청
   })
 
-  const currentData: FortuneResponse | undefined = activeTab === 'monthly' ? monthly.data : weekly.data
-  const currentLoading = activeTab === 'monthly' ? monthly.isLoading : weekly.isLoading
-  const currentError = activeTab === 'monthly' ? monthly.error : weekly.error
-  const currentRefetch = activeTab === 'monthly' ? monthly.refetch : weekly.refetch
+  // 대출운 fetch
+  const loan = useQuery({
+    queryKey: ['fortune', 'loan', hashForQueryKey(input, birthDate)],
+    queryFn: () => fetchFortune({
+      name: input.name,
+      birthDate,
+      birthHour: input.birthHour,
+      gender: input.gender,
+      creditScore: input.creditScore,
+      period: 'loan',
+      sessionId,
+    }),
+    enabled: activeTab === 'loan', // 탭 클릭 시에만 요청
+  })
+
+  const currentQuery = activeTab === 'monthly' ? monthly : activeTab === 'weekly' ? weekly : loan
+  const currentData: FortuneResponse | undefined = currentQuery.data
+  const currentLoading = currentQuery.isLoading
+  const currentError = currentQuery.error
+  const currentRefetch = currentQuery.refetch
 
   // 이미지 다운로드
   const handleDownload = useCallback(async () => {
@@ -80,7 +98,8 @@ export default function ResultView({ input, onBack }: ResultViewProps) {
         backgroundColor: '#1e1b4b',
       })
       const link = document.createElement('a')
-      link.download = `금전운세_${input.name}_${activeTab === 'monthly' ? '월간' : '주간'}_${new Date().toISOString().slice(0,7)}.png`
+      const tabLabel = activeTab === 'monthly' ? '월간' : activeTab === 'weekly' ? '주간' : '대출운'
+      link.download = `금전운세_${input.name}_${tabLabel}_${new Date().toISOString().slice(0,7)}.png`
       link.href = dataUrl
       link.click()
     } catch {
@@ -144,6 +163,16 @@ export default function ResultView({ input, onBack }: ResultViewProps) {
         >
           주간 운세
         </button>
+        <button
+          onClick={() => setActiveTab('loan')}
+          className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition ${
+            activeTab === 'loan'
+              ? 'bg-teal-500 text-white shadow'
+              : 'text-white/50 hover:text-white/80'
+          }`}
+        >
+          대출운
+        </button>
       </div>
 
       {/* 결과 영역 */}
@@ -160,17 +189,22 @@ export default function ResultView({ input, onBack }: ResultViewProps) {
             {/* 유저 정보 헤더 */}
             <div className="text-center mb-4">
               <h2 className="text-white font-bold text-lg">
-                {input.name}님의 {activeTab === 'monthly' ? '월간' : '주간'} 금전운세
+                {input.name}님의 {activeTab === 'monthly' ? '월간' : activeTab === 'weekly' ? '주간' : '대출'} {activeTab === 'loan' ? '운세' : '금전운세'}
               </h2>
               <p className="text-white/40 text-xs mt-1">
                 {input.birthYear}년 {input.birthMonth}월 {input.birthDay}일생
               </p>
+              {input.creditScore !== 'unknown' && (
+                <CreditScoreBadge creditScore={input.creditScore} />
+              )}
             </div>
 
             {activeTab === 'monthly' && currentData.result.period === 'monthly' ? (
               <MonthlyResult fortune={currentData.result as MonthlyFortune} />
-            ) : currentData.result.period === 'weekly' ? (
+            ) : activeTab === 'weekly' && currentData.result.period === 'weekly' ? (
               <WeeklyResult fortune={currentData.result as WeeklyFortune} />
+            ) : activeTab === 'loan' && currentData.result.period === 'loan' ? (
+              <LoanResult fortune={currentData.result as LoanFortune} />
             ) : null}
           </div>
 
@@ -204,6 +238,32 @@ export default function ResultView({ input, onBack }: ResultViewProps) {
       <p className="text-center text-xs text-white/20 pb-4">
         본 서비스는 엔터테인먼트 목적이며 전문 금융 자문이 아닙니다.
       </p>
+    </div>
+  )
+}
+
+const CREDIT_BADGE_STYLES: Record<string, { bg: string; border: string; text: string; label: string }> = {
+  '900-1000': { bg: 'bg-emerald-500/15', border: 'border-emerald-400/30', text: 'text-emerald-200', label: '신용 우수' },
+  '800-899': { bg: 'bg-blue-500/15', border: 'border-blue-400/30', text: 'text-blue-200', label: '신용 양호' },
+  '700-799': { bg: 'bg-blue-500/15', border: 'border-blue-400/30', text: 'text-blue-200', label: '신용 양호' },
+  '600-699': { bg: 'bg-yellow-500/15', border: 'border-yellow-400/30', text: 'text-yellow-200', label: '신용 보통' },
+  '500-599': { bg: 'bg-orange-500/15', border: 'border-orange-400/30', text: 'text-orange-200', label: '신용 주의' },
+  '0-499': { bg: 'bg-red-500/15', border: 'border-red-400/30', text: 'text-red-200', label: '신용 위험' },
+}
+
+function CreditScoreBadge({ creditScore }: { creditScore: string }) {
+  const style = CREDIT_BADGE_STYLES[creditScore]
+  if (!style) return null
+
+  const range = CREDIT_SCORE_RANGES.find(r => r.value === creditScore)
+  const scoreText = range ? range.value.replace('-', '~') + '점' : ''
+
+  return (
+    <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full ${style.bg} border ${style.border}`}>
+      <span className="text-xs">📊</span>
+      <span className={`text-xs font-medium ${style.text}`}>
+        {style.label} ({scoreText}) 기준 맞춤 분석
+      </span>
     </div>
   )
 }
