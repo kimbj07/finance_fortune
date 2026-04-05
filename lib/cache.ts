@@ -62,6 +62,14 @@ export function getMonthlyPeriodKey(): string {
   return `monthly:${year}-${month}`
 }
 
+/** 현재 월의 대출운 period key (예: loan:2026-04) */
+export function getLoanPeriodKey(): string {
+  const now = new Date(Date.now() + KST_OFFSET)
+  const year = now.getUTCFullYear()
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0')
+  return `loan:${year}-${month}`
+}
+
 /** 현재 주의 period key (예: weekly:2026-W14) */
 export function getWeeklyPeriodKey(): string {
   const now = new Date(Date.now() + KST_OFFSET)

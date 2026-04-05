@@ -28,6 +28,7 @@ import {
   generateFortuneKey,
   getMonthlyPeriodKey,
   getWeeklyPeriodKey,
+  getLoanPeriodKey,
   getMonthlyTTL,
   getWeeklyTTL,
   getCached,
@@ -199,9 +200,12 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
   }
 
   // Cache check
-  const periodKey = body.period === 'weekly' ? getWeeklyPeriodKey() : getMonthlyPeriodKey()
-  const cacheKey = generateFortuneKey(body.name, body.birthDate, body.birthHour, body.gender,
-    body.period === 'loan' ? periodKey.replace('monthly:', 'loan:') : periodKey)
+  const periodKey = body.period === 'weekly'
+    ? getWeeklyPeriodKey()
+    : body.period === 'loan'
+    ? getLoanPeriodKey()
+    : getMonthlyPeriodKey()
+  const cacheKey = generateFortuneKey(body.name, body.birthDate, body.birthHour, body.gender, periodKey)
 
   const cached = await getCached<unknown>(cacheKey)
   if (cached) {

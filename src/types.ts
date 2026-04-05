@@ -9,6 +9,9 @@ export interface UserInput {
   creditScore: string // 신용점수 구간 or 'unknown'
 }
 
+/** 운세 기간 타입 */
+export type FortunePeriod = 'monthly' | 'weekly' | 'loan'
+
 /** API 요청 바디 */
 export interface FortuneRequest {
   name: string
@@ -16,7 +19,7 @@ export interface FortuneRequest {
   birthHour: string
   gender: 'male' | 'female'
   creditScore: string // 신용점수 구간 or 'unknown'
-  period: 'monthly' | 'weekly' | 'loan'
+  period: FortunePeriod
   sessionId: string
   /** 주간 운세 생성 시 월간 운세 context (일관성 유지용) */
   monthlyContext?: {

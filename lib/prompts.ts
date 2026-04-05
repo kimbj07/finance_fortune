@@ -113,6 +113,44 @@ function sanitizeForPrompt(input: string, maxLength = 100): string {
     .slice(0, maxLength)
 }
 
+interface PromptContext {
+  safeName: string
+  safeBirthDate: string
+  hourName: string
+  genderLabel: string
+  year: number
+  month: number
+  creditInfo: string
+}
+
+function buildPromptContext(
+  name: string,
+  birthDate: string,
+  birthHour: string,
+  gender: 'male' | 'female',
+  creditScore: string = 'unknown',
+): PromptContext {
+  const now = new Date(Date.now() + 9 * 60 * 60 * 1000) // KST
+  return {
+    safeName: sanitizeForPrompt(name, 20),
+    safeBirthDate: sanitizeForPrompt(birthDate, 10),
+    hourName: getBirthHourName(birthHour),
+    genderLabel: gender === 'male' ? '남성' : '여성',
+    year: now.getUTCFullYear(),
+    month: now.getUTCMonth() + 1,
+    creditInfo: creditScore !== 'unknown'
+      ? `\n신용점수 구간: ${getCreditScoreLabel(creditScore)}`
+      : '',
+  }
+}
+
+function formatUserInfo(ctx: PromptContext): string {
+  return `이름: ${ctx.safeName}
+생년월일: ${ctx.safeBirthDate}
+태어난 시간: ${ctx.hourName}
+성별: ${ctx.genderLabel}${ctx.creditInfo}`
+}
+
 export function buildMonthlyPrompt(
   name: string,
   birthDate: string,
@@ -120,24 +158,11 @@ export function buildMonthlyPrompt(
   gender: 'male' | 'female',
   creditScore: string = 'unknown',
 ): { systemPrompt: string; userPrompt: string } {
-  const safeName = sanitizeForPrompt(name, 20)
-  const hourName = getBirthHourName(birthHour)
-  const genderLabel = gender === 'male' ? '남성' : '여성'
+  const ctx = buildPromptContext(name, birthDate, birthHour, gender, creditScore)
 
-  const now = new Date(Date.now() + 9 * 60 * 60 * 1000) // KST
-  const year = now.getUTCFullYear()
-  const month = now.getUTCMonth() + 1
+  const userPrompt = `${ctx.year}년 ${ctx.month}월 금전운세를 봐주세요.
 
-  const creditInfo = creditScore !== 'unknown'
-    ? `\n신용점수 구간: ${getCreditScoreLabel(creditScore)}`
-    : ''
-
-  const userPrompt = `${year}년 ${month}월 금전운세를 봐주세요.
-
-이름: ${safeName}
-생년월일: ${sanitizeForPrompt(birthDate, 10)}
-태어난 시간: ${hourName}
-성별: ${genderLabel}${creditInfo}`
+${formatUserInfo(ctx)}`
 
   return { systemPrompt: SYSTEM_PROMPT_MONTHLY, userPrompt }
 }
@@ -150,15 +175,9 @@ export function buildWeeklyPrompt(
   creditScore: string = 'unknown',
   monthlyContext?: { score: number; summary: string },
 ): { systemPrompt: string; userPrompt: string } {
-  const safeName = sanitizeForPrompt(name, 20)
-  const hourName = getBirthHourName(birthHour)
-  const genderLabel = gender === 'male' ? '남성' : '여성'
+  const ctx = buildPromptContext(name, birthDate, birthHour, gender, creditScore)
 
   const now = new Date(Date.now() + 9 * 60 * 60 * 1000)
-  const year = now.getUTCFullYear()
-  const month = now.getUTCMonth() + 1
-
-  // 이번 주의 시작일~종료일 계산
   const dayOfWeek = now.getUTCDay()
   const monday = new Date(now)
   monday.setUTCDate(now.getUTCDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
@@ -175,16 +194,9 @@ export function buildWeeklyPrompt(
 월간 요약: ${sanitizeForPrompt(monthlyContext.summary, 200)}`
   }
 
-  const creditInfo = creditScore !== 'unknown'
-    ? `\n신용점수 구간: ${getCreditScoreLabel(creditScore)}`
-    : ''
+  const userPrompt = `${ctx.year}년 ${ctx.month}월 ${weekStart}~${weekEnd} 주간 금전운세를 봐주세요.
 
-  const userPrompt = `${year}년 ${month}월 ${weekStart}~${weekEnd} 주간 금전운세를 봐주세요.
-
-이름: ${safeName}
-생년월일: ${sanitizeForPrompt(birthDate, 10)}
-태어난 시간: ${hourName}
-성별: ${genderLabel}${creditInfo}${monthlyInfo}`
+${formatUserInfo(ctx)}${monthlyInfo}`
 
   return { systemPrompt: SYSTEM_PROMPT_WEEKLY, userPrompt }
 }
@@ -196,24 +208,11 @@ export function buildLoanPrompt(
   gender: 'male' | 'female',
   creditScore: string = 'unknown',
 ): { systemPrompt: string; userPrompt: string } {
-  const safeName = sanitizeForPrompt(name, 20)
-  const hourName = getBirthHourName(birthHour)
-  const genderLabel = gender === 'male' ? '남성' : '여성'
+  const ctx = buildPromptContext(name, birthDate, birthHour, gender, creditScore)
 
-  const now = new Date(Date.now() + 9 * 60 * 60 * 1000) // KST
-  const year = now.getUTCFullYear()
-  const month = now.getUTCMonth() + 1
+  const userPrompt = `${ctx.year}년 ${ctx.month}월 대출운을 봐주세요.
 
-  const creditInfo = creditScore !== 'unknown'
-    ? `\n신용점수 구간: ${getCreditScoreLabel(creditScore)}`
-    : ''
-
-  const userPrompt = `${year}년 ${month}월 대출운을 봐주세요.
-
-이름: ${safeName}
-생년월일: ${sanitizeForPrompt(birthDate, 10)}
-태어난 시간: ${hourName}
-성별: ${genderLabel}${creditInfo}`
+${formatUserInfo(ctx)}`
 
   return { systemPrompt: SYSTEM_PROMPT_LOAN, userPrompt }
 }

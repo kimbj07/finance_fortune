@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { domToPng } from 'modern-screenshot'
-import type { UserInput, MonthlyFortune, WeeklyFortune, LoanFortune, FortuneResponse } from '../types'
+import type { UserInput, FortunePeriod, MonthlyFortune, WeeklyFortune, LoanFortune, FortuneResponse } from '../types'
 import { fetchFortune } from '../services/api'
 import { getSessionId } from '../utils/session'
 import { CREDIT_SCORE_RANGES } from '../../lib/constants'
@@ -29,7 +29,7 @@ function hashForQueryKey(input: UserInput, birthDate: string): string {
 }
 
 export default function ResultView({ input, onBack }: ResultViewProps) {
-  const [activeTab, setActiveTab] = useState<'monthly' | 'weekly' | 'loan'>('monthly')
+  const [activeTab, setActiveTab] = useState<FortunePeriod>('monthly')
   const resultRef = useRef<HTMLDivElement>(null)
 
   const birthDate = buildBirthDate(input)

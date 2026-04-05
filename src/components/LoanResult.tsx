@@ -1,5 +1,6 @@
 import type { LoanFortune } from '../types'
 import ScoreGauge from './ScoreGauge'
+import LuckCard from './LuckCard'
 
 interface LoanResultProps {
   fortune: LoanFortune
@@ -38,9 +39,9 @@ export default function LoanResult({ fortune }: LoanResultProps) {
 
       {/* 상세 운세 */}
       <div className="grid grid-cols-1 gap-3">
-        <LuckCard icon={LUCK_ICONS.timing!} title="대출 타이밍" text={fortune.timingLuck} />
-        <LuckCard icon={LUCK_ICONS.rate!} title="금리 흐름" text={fortune.rateLuck} />
-        <LuckCard icon={LUCK_ICONS.repayment!} title="상환운" text={fortune.repaymentLuck} />
+        <LuckCard icon={LUCK_ICONS.timing!} title="대출 타이밍" text={fortune.timingLuck} titleClass="text-teal-200" />
+        <LuckCard icon={LUCK_ICONS.rate!} title="금리 흐름" text={fortune.rateLuck} titleClass="text-teal-200" />
+        <LuckCard icon={LUCK_ICONS.repayment!} title="상환운" text={fortune.repaymentLuck} titleClass="text-teal-200" />
       </div>
 
       {/* 주의할 점 */}
@@ -70,18 +71,6 @@ export default function LoanResult({ fortune }: LoanResultProps) {
         <p className="text-white/30 text-xs text-center leading-relaxed">
           본 대출운은 재미 목적의 운세이며, 실제 대출 결정의 근거가 아닙니다.
         </p>
-      </div>
-    </div>
-  )
-}
-
-function LuckCard({ icon, title, text }: { icon: string; title: string; text: string }) {
-  return (
-    <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-start gap-3">
-      <span className="text-xl mt-0.5">{icon}</span>
-      <div>
-        <h4 className="text-teal-200 font-medium text-sm mb-1">{title}</h4>
-        <p className="text-white/70 text-sm leading-relaxed">{text}</p>
       </div>
     </div>
   )

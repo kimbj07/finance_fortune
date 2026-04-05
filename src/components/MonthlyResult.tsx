@@ -1,5 +1,6 @@
 import type { MonthlyFortune } from '../types'
 import ScoreGauge from './ScoreGauge'
+import LuckCard from './LuckCard'
 
 interface MonthlyResultProps {
   fortune: MonthlyFortune
@@ -86,18 +87,6 @@ export default function MonthlyResult({ fortune }: MonthlyResultProps) {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function LuckCard({ icon, title, text }: { icon: string; title: string; text: string }) {
-  return (
-    <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-start gap-3">
-      <span className="text-xl mt-0.5">{icon}</span>
-      <div>
-        <h4 className="text-indigo-200 font-medium text-sm mb-1">{title}</h4>
-        <p className="text-white/70 text-sm leading-relaxed">{text}</p>
-      </div>
     </div>
   )
 }
